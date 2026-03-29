@@ -32,31 +32,88 @@ By accessing and using this tool, you agree to:
 
 ## 🎯 Features
 
-- **6 Attack Techniques** with full descriptions and severity ratings
+- **7 Attack Techniques** with full descriptions and severity ratings
 - **Upload your own SVG** or start from a built-in template
 - **Payload parameter customization** — callback URL, file path, custom JS
 - **Syntax-highlighted output** with one-click download
 - **Sandboxed visual preview** (scripts safely blocked)
 - **Forensic analysis panel** — lists detected vectors and mitigations
+- **SVG Phishing Demo Generator** — localhost-only, sandboxed, clearly labelled demo login page
+- **Edit mode** — modify generated SVG with live safety validation before applying
 - **Three UI themes** — Dark, Light, Eye-Save (warm yellowish)
-- **100% client-side** — no server, no data sent anywhere
+- **100% client-side** — no server, no data sent anywhere, no tracking
 
 ---
 
 ## 🔬 Techniques Covered
 
-| # | Technique | Class | Severity |
-|---|-----------|-------|----------|
-| 1 | Inline `onload` XSS | XSS | Critical |
-| 2 | `<script>` Tag Injection | XSS | Critical |
-| 3 | Image-based Data Exfiltration | Exfil | High |
-| 4 | `<foreignObject>` DOM Injection | DOM XSS | Critical |
-| 5 | XML External Entity (XXE) | XXE / LFI | Critical+ |
-| 6 | Cookie Exfiltration via Fetch | Cookie Theft | Critical+ |
+| # | Technique | Class | Severity | Notes |
+|---|-----------|-------|----------|-------|
+| 1 | Inline `onload` XSS | XSS | Critical | |
+| 2 | `<script>` Tag Injection | XSS | Critical | |
+| 3 | Image-based Data Exfiltration | Exfil | High | |
+| 4 | `<foreignObject>` DOM Injection | DOM XSS | Critical | |
+| 5 | XML External Entity (XXE) | XXE / LFI | Critical+ | |
+| 6 | Cookie Exfiltration via Fetch | Cookie Theft | Critical+ | |
+| 7 | SVG Phishing Login Page | Phishing | ⚠ Demo Only | Localhost-only, sandboxed |
 
 ---
 
-## ⚖️ Legal Framework — Abuse Laws
+## 🎣 SVG Phishing Demo — Design Constraints
+
+Technique #7 is intentionally sandboxed and operates under strict constraints that cannot be bypassed within the tool. This section documents the design decisions and the reasoning behind them.
+
+### What it demonstrates
+
+SVG files can embed complete HTML login forms using `<foreignObject>`, which allows HTML elements to exist inside an SVG namespace. When a victim opens such an SVG — as an email attachment, a browser-rendered file, or an injected element — they see a fully rendered login page. On form submission, credentials are sent silently via HTTP POST.
+
+This technique is dangerous in the real world because email security gateways typically scan link destinations and attachment file types but do not parse SVG internals for embedded HTML or form actions.
+
+### Hardcoded safety constraints
+
+| Constraint | Reason |
+|-----------|--------|
+| POST target is `localhost` only — no external host allowed | Prevents the tool from functioning as a real credential harvester |
+| Company name fixed as `BananaCorp™ Portal` — readonly, non-editable | Prevents creation of convincing impersonation pages |
+| Dual DEMO banners baked into the SVG — top bar + inline notice | Victim always knows it is a demo even if the SVG is extracted and shared |
+| `DEMO` watermark rendered in the SVG background | Cannot be stripped without editing the raw source |
+| Edit mode validates all three constraints before applying changes | Hard blocks any attempt to point `action=` at an external URL |
+
+### Why uploading your own SVG to inject phishing logic is not supported
+
+Allowing arbitrary SVG upload as a phishing base would remove the company-name and visual constraints entirely — a user could upload a pixel-perfect clone of a real login page and the tool would inject a working credential harvester into it. That crosses from demonstrating the technique to producing a functional phishing kit. The demo teaches the mechanism; it does not need to be weaponizable to do that.
+
+### How to run the demo
+
+```bash
+# Step 1 — start a local listener in any folder
+python3 -m http.server 8080
+
+# Step 2 — generate and download the SVG from the tool (enter port 8080)
+
+# Step 3 — place the SVG in the same folder, then open:
+# http://localhost:8080/phish-demo-bananacorp.svg
+
+# Step 4 — fill in the fake form and submit
+# Step 5 — watch the POST appear in your terminal log
+```
+
+> **Note:** Some browsers block cross-origin POST from `file://`. Serving via `python3 -m http.server` ensures same-origin and consistent behaviour.
+
+---
+
+## ✏️ Edit Mode
+
+All generated SVG output (both injection payloads and the phishing demo) can be edited directly in the browser before downloading. The editor is a plain textarea pre-populated with the generated source.
+
+For the phishing demo, the editor enforces the following before accepting changes:
+
+- `localhost` must remain present in the source
+- `DEMO` label must remain present
+- `SECURITY RESEARCH DEMO` banner text must remain
+- Any `action=` attribute pointing to a non-localhost URL is **hard blocked** — changes cannot be applied
+
+For the six injection techniques, edit mode lets researchers tweak payload JS, adjust attribute placement, or modify SVG structure to test sanitizer edge cases.
 
 Using this tool without authorization is a criminal offense. The following laws apply depending on your jurisdiction.
 
@@ -178,6 +235,7 @@ For defenders — what SVG Attack Lab tests against:
 | External resource exfil | CSP: `img-src 'self'`; block external references |
 | XXE (server-side) | Disable external entity resolution; use `defusedxml` (Python), `FEATURE_SECURE_PROCESSING` (Java) |
 | Cookie theft | Set `HttpOnly` and `Secure` flags; enforce `SameSite=Strict` |
+| SVG phishing | Block SVG attachments in email gateways; scan SVG content for `<foreignObject>` and `<form>`; user awareness training; enforce MFA so stolen passwords alone are insufficient |
 | General SVG upload | Convert to PNG server-side; serve with `Content-Type: image/png` + `X-Content-Type-Options: nosniff` |
 
 ---
